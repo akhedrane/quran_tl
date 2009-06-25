@@ -59,11 +59,10 @@ foreach ($matches as $key => $val){
         if (!$val) $val = 0;
     }
 
-    $text = substr($fulltext, $val);
-    if (strlen($text) > 50)
-        $text = substr($text, 0, 50);
-    
-    $arr[]['match'] = "$sura:$ayah - $text";
+    $text = $fulltext;
+
+    $match = array('sura' => $sura, 'ayah' => $ayah, 'match' => $text); 
+    $arr[] = $match;
     if (count($arr)==10) break;
 }
 
