@@ -1,0 +1,24 @@
+# In the name of Allah, Most Gracious, Most Merciful
+
+ ___ ___ _________ ____ 
+/ _ `/ // / __/ _ `/ _ \
+\_, /\_,_/_/  \_,_/_//_/
+ /_/  transliteration tools
+
+purpose: to provide working examples and code for doing transliteration search,
+autocompletion, and so on for Qur'anic text.
+
+steps to setup:
+1.  make a mysql database (ex, 'quran').  add permissions as necessary.
+2.  source data/transliteration.sql.  this contains the base transliteration data (transliteration for each sura and ayah).
+3.  add a file called auth.inc with 5 lines:
+
+<?php
+$mysql_host = 'localhost';
+$mysql_user = '';
+$mysql_passwd = '';
+$mysql_db = 'quran';
+
+and fill in the values accordingly.
+
+4.  run data/cache/gencache.php to generate the data cache.
