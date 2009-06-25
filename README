@@ -10,7 +10,7 @@ autocompletion, and so on for Qur'anic text.
 
 steps to setup:
 1.  make a mysql database (ex, 'quran').  add permissions as necessary.
-2.  source data/transliteration.sql.  this contains the base transliteration data (transliteration for each sura and ayah).
+2.  source data/transliteration.sql.  this contains the base transliteration data (transliteration of the Quran).
 3.  add a file called auth.inc with 5 lines:
 
 <?php
@@ -21,4 +21,5 @@ $mysql_db = 'quran';
 
 and fill in the values accordingly.
 
-4.  run data/cache/gencache.php to generate the data cache.
+4.  source data/cache/cache.sql in mysql and add permissions as necessary.
+5.  run data/cache/gencache.php to generate the data cache.

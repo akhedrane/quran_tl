@@ -32,8 +32,8 @@ if (count($words)==1){
     $matches = $arr;
 }
 else {
-    $sql = "select suranum, ayahnum from ayahType where " .
-           "quranid=6 and ayahtext like '%$query%'";
+    $sql = "select suranum, ayahnum from transliteration where " .
+           "ayahtext like '%$query%'";
     $res = mysql_query($sql) or
         die("could not query: " . mysql_error());
     $arr = array();
@@ -47,7 +47,7 @@ $arr = array();
 foreach ($matches as $key => $val){
     list($sura, $ayah) = split(':', $val);
 
-    $q = "select ayahtext from ayahType where quranid=6 and " .
+    $q = "select ayahtext from transliteration where " .
         "suranum=$sura and ayahnum=$ayah";
     $res = mysql_query($q) or die("could not query: " . mysql_error());
     $row = mysql_fetch_assoc($res);
