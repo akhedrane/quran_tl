@@ -15,6 +15,7 @@ if (strlen($query) == 0){
 $matches = array();
 $words = split(' ', $query);
 
+$procesing_done = false;
 if (count($words)==1){
     $q = "select matches from cache where word like '$query%'";
     $res = mysql_query($q) or
@@ -34,7 +35,7 @@ if (count($words)==1){
 }
 
 if (count($words) > 1) {
-    if (count($words) == 2){
+   if (count($words) == 2){
        $q = "select second_word, matches from cache_l2 where word='" .
           $words[0] . "' and second_word like '" . $words[1] . "%'";
        $res = mysql_query($q) or
@@ -64,6 +65,7 @@ if (count($words) > 1) {
              $iter++;
           }
           $matches = $arr;
+          $processing_done = true;
        }
        else {
           $keys = array_keys($agg_arr);
@@ -71,6 +73,7 @@ if (count($words) > 1) {
           $words[] = '';
        }
     }
+
     if (count($words) == 3){
        $q = "select third_word, matches from cache_l3 where word='" .
           $words[0] . "' and second_word='" . $words[1] . "' and " .
@@ -103,7 +106,7 @@ if (count($words) > 1) {
        }
        $matches = $arr;
     }
-    else {
+    else if (!$processing_done) {
        $sql = "select suranum, ayahnum from transliteration where " .
               "ayahtext like '%$query%'";
        $res = mysql_query($sql) or
