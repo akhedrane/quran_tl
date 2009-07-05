@@ -16,77 +16,65 @@ $matches = array();
 $words = split(' ', $query);
 
 $processing_done = false;
-if (count($words)==1){
-   $res = get_matches($words[0]);
-   if (count($res)==1){
-      $keys = array_keys($res);
-      $words[0] = $keys[0];
-      $words[1] = "";
-   }
-   else {
-      $matches = choose_results($res, $limit);
-      $processing_done = true;
-   }
-}
 
-if (count($words) == 2){
-   $res = get_matches($words[0], $words[1]);
+// cache_l1 and cache_l2 queries
+while (true){
+   if (count($words) > 2) break;
+   $res = get_matches($words[0], isset($words[1])? $words[1] : null);
    if (count($res) > 1){
       $matches = choose_results($res, $limit);
       $processing_done = true;
+      break;
    }
-
    else {
       $keys = array_keys($res);
-      $words[1] = $keys[0];
-      $words[2] = '';
+      $idx = count($words)-1;
+      $words[$idx] = $keys[0];
+      $words[$idx+1] = '';
+      if ($idx > 0) break;
    }
 }
 
-# todo - change this to >= 3, make else if an if.
-# if count($res) > 1 - return choose_results();
-# else if count($matches) < 5, fall through and sql.
-# else $res2 = get_matches($words[1], $words[2], $words[3] || "")
-#      join res and res2 together using intersections
-#      if count($res) > 1 - return choose_results();
-#      else if count($matches < 5), fall through and sql.
-#      else if already looked at all words and blank, return choose_results.
-#      else loop.
-
-if ((!$processing_done) && (count($words) == 3)){
-   $res = get_matches($words[0], $words[1], $words[2]);
-   $matches = choose_results($res, $limit);
-   $processing_done = true;
-}
-else if (!$processing_done) {
-   $sql = "select suranum, ayahnum from transliteration where " .
-      "ayahtext like '%$query%'";
-   $res = mysql_query($sql) or
-      die("could not query: " . mysql_error());
-   $arr = array();
-   while ($row = mysql_fetch_assoc($res)){
-      $arr[] = $row['suranum'] . ":" . $row['ayahnum'];
+// cache_l3 queries
+if ((!$processing_done) && (count($words) >= 3)){
+   $ctr = 0;
+   $cur_res = array();
+   while (true){
+      $third_word = (isset($words[$ctr+2])? $words[$ctr+2] : "");
+      $res = get_matches($words[$ctr], $words[$ctr+1], $third_word);
+      if (!empty($cur_res))
+         $res = result_merge($cur_res, $res);
+      if ((empty($third_word)) || 
+          ((count($words) <= ($ctr+3)) && (count($res)>1))){
+         $matches = choose_results($res, $limit);
+         $processing_done = true;
+         break;
+      }
+      $num_matches = 0;
+      foreach ($res as $word => $matches)
+         $num_matches += count($matches);
+      if ($num_matches < $limit){
+         $matches = choose_results($res, $limit);
+         $processing_done = true;
+         break;
+      }
+      $cur_res = $res;
+      $ctr++;
    }
-   $matches = $arr;
 }
-
 
 $arr = array();
 foreach ($matches as $key => $val){
-   list($sura, $ayah) = split(':', $val);
+   $verse_num = $val;
 
-   $q = "select ayahtext from transliteration where " .
-      "suranum=$sura and ayahnum=$ayah";
+   $q = "select suranum, ayahnum, ayahtext from transliteration " .
+      "where versenum=$verse_num";
    $res = mysql_query($q) or die("could not query: " . mysql_error());
    $row = mysql_fetch_assoc($res);
    $fulltext = $row['ayahtext'];
 
-   $val = stripos($fulltext, " $query");
-   if (!$val){
-      $val = stripos($fulltext, "$query");
-      if (!$val) $val = 0;
-   }
-
+   $sura = $row['suranum'];
+   $ayah = $row['ayahnum'];
    $text = $fulltext;
 
    $match = array('sura' => $sura, 'ayah' => $ayah, 'match' => $text); 
@@ -96,6 +84,19 @@ foreach ($matches as $key => $val){
 
 $res = array('results' => $arr);
 print json_encode($res);
+
+function result_merge($oldarr, $newarr){
+   $res = array();
+   $oldarr_m = array_values($oldarr);
+
+   foreach ($newarr as $key => $val){
+      $m = array_intersect($val, $oldarr_m[0]);
+      if (count($m) > 0)
+         $res[$key] = $m;
+   }
+
+   return $res;
+}
 
 function choose_results($res, $limit){
    $iter = 0;
@@ -129,7 +130,7 @@ function get_matches($word, $word2 = null, $word3 = null){
    if (!is_null($word3))
       $cond .= " and third_word like '$word3%'";
    $q = "select $columns from $tbl where $cond";
-   $res = mysql_query($q) or die("[$q] could not query: " . mysql_error());
+   $res = mysql_query($q) or die("could not query: " . mysql_error());
 
    $ret = array();
    while ($row = mysql_fetch_assoc($res)){
@@ -139,7 +140,7 @@ function get_matches($word, $word2 = null, $word3 = null){
 
    if (count($ret)==0){
       print json_encode(array());
-      return;
+      exit;
    }
 
    return $ret;

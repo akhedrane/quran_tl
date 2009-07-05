@@ -48,12 +48,12 @@ $l2cache = array();
 $l3cache = array();
 for ($sura=1; $sura<115; $sura++){
     print "processing sura $sura\n";
-    $q = "select ayahnum, ayahtext from transliteration where suranum=$sura";
+    $q = "select versenum, ayahtext from transliteration where suranum=$sura";
 
     $res = mysql_query($q) or die("could not query: " . mysql_error());
     while ($row = mysql_fetch_assoc($res)){
         $text = $row['ayahtext'];
-        $ayah = $row['ayahnum'];
+        $versenum = $row['versenum'];
         $text = trim($text);
 
         $words = split(' ', $text);
@@ -63,15 +63,15 @@ for ($sura=1; $sura<115; $sura++){
             $w = $words[$i];
             $w = strtolower($w);
             if ($inMemory)
-               cacheEntry($cache, $w, "$sura:$ayah");
-            else sqlCacheEntry("$sura:$ayah", $w);
+               cacheEntry($cache, $w, "$versenum");
+            else sqlCacheEntry("$versenum", $w);
 
             if (($i+1) < $cnt){
                $w2 = strtolower($words[$i+1]);
                $k = "$w:$w2";
                if ($inMemory)
-                  cacheEntry($l2cache, $k, "$sura:$ayah");
-               else sqlCacheEntry("$sura:$ayah", $w, $w2);
+                  cacheEntry($l2cache, $k, "$versenum");
+               else sqlCacheEntry("$versenum", $w, $w2);
             }
 
             if (($i+2) < $cnt){
@@ -79,8 +79,8 @@ for ($sura=1; $sura<115; $sura++){
                $w3 = strtolower($words[$i+2]);
                $k = "$w:$w2:$w3";
                if ($inMemory)
-                  cacheEntry($l3cache, $k, "$sura:$ayah");
-               else sqlCacheEntry("$sura:$ayah", $w, $w2, $w3);
+                  cacheEntry($l3cache, $k, "$versenum");
+               else sqlCacheEntry("$versenum", $w, $w2, $w3);
             }
         }
     }
