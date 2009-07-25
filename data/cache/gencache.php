@@ -56,7 +56,10 @@ for ($sura=1; $sura<115; $sura++){
         $versenum = $row['versenum'];
         $text = trim($text);
 
-        $words = split(' ', $text);
+        // work around for a bug where some text has extra spaces
+        $text = str_replace('  ', ' ', $text, $count);
+
+        $words = split(' ', mysql_real_escape_string($text));
         $cnt = count($words);
         $seen += $cnt;
         for ($i=0; $i<$cnt; $i++){
